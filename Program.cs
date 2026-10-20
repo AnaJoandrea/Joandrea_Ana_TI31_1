@@ -11,37 +11,56 @@ namespace WordFrequency
             {
                 Console.WriteLine("Incepem extragerea trasaturilor...");
 
-                string caleaCatreStopwords = @"D:\Desktop\Facultate\Anul 3\L Sisteme de recunoastere a formelor\stopwords.txt";
+                string folderBaza = @"D:\Desktop\Facultate\Anul 3\L Sisteme de recunoastere a formelor";
+                string caleaCatreStopwords = Path.Combine(folderBaza, "stopwords.txt");
 
                 if (!File.Exists(caleaCatreStopwords))
                 {
                     Console.WriteLine("EROARE: Nu gasesc fisierul stopwords.txt la calea: " + caleaCatreStopwords);
-                    Console.WriteLine("Apasa orice tasta pentru a iesi...");
                     Console.ReadKey();
                     return;
                 }
 
                 FeatureExtractor extractor = new FeatureExtractor(caleaCatreStopwords);
-                string folderTraining = @"D:\Desktop\Facultate\Anul 3\L Sisteme de recunoastere a formelor\Reuters\Reuters_34\Training";
-                string[] fisiereXml = Directory.GetFiles(folderTraining, "*.XML");
 
-                Console.WriteLine($"Am gasit {fisiereXml.Length} articole XML in folderul Training. Procesam...");
-
-                if (fisiereXml.Length == 0)
+                string folderReuters = Path.Combine(folderBaza, @"Reuters\Reuters_34");
+                string folderTraining = Path.Combine(folderReuters, "Training");
+                string folderTesting = Path.Combine(folderReuters, "Testing");
+                if (!Directory.Exists(folderTesting))
                 {
-                    Console.WriteLine("EROARE: Nu s-au gasit fisiere XML in folderul Training.");
-                    Console.WriteLine("Apasa orice tasta pentru a iesi...");
-                    Console.ReadKey();
-                    return;
+                    folderTesting = Path.Combine(folderReuters, "Test");
                 }
 
-                string fisierRezultat = @"D:\Desktop\Facultate\Anul 3\L Sisteme de recunoastere a formelor\rezultat_vectori_training.txt";
+                if (Directory.Exists(folderTraining))
+                {
+                    string[] fisiereTraining = Directory.GetFiles(folderTraining, "*.XML");
+                    Console.WriteLine($"Am gasit {fisiereTraining.Length} articole XML in Training. Extragem cuvintele...");
+                    extractor.AddDocuments(fisiereTraining, "Training");
+                }
+                else
+                {
+                    Console.WriteLine("ATENTIE: Nu am gasit folderul Training la: " + folderTraining);
+                }
 
-                extractor.ProcessDocuments(fisiereXml, fisierRezultat, "Training");
+                if (Directory.Exists(folderTesting))
+                {
+                    string[] fisiereTesting = Directory.GetFiles(folderTesting, "*.XML");
+                    Console.WriteLine($"Am gasit {fisiereTesting.Length} articole XML in Testing. Extragem cuvintele...");
+                    extractor.AddDocuments(fisiereTesting, "Testing");
+                }
+                else
+                {
+                    Console.WriteLine("ATENTIE: Nu am gasit folderul Testing/Test in: " + folderReuters);
+                }
 
-                extractor.SaveGlobalDictionary(@"D:\Desktop\Facultate\Anul 3\L Sisteme de recunoastere a formelor\dictionar_global.txt");
+                string fisierRezultat = Path.Combine(folderBaza, "rezultat_vectori.txt");
+                extractor.SaveResults(fisierRezultat);
 
-                Console.WriteLine("Extragerea s-a finalizat cu succes! Verifica fisierul rezultat_vectori_training.txt.");
+                string fisierDictionar = Path.Combine(folderBaza, "dictionar_global.txt");
+                extractor.SaveGlobalDictionary(fisierDictionar);
+
+                Console.WriteLine("Extragerea s-a finalizat cu succes!");
+                Console.WriteLine("Verifica fisierul: " + fisierRezultat);
             }
             catch (Exception ex)
             {
